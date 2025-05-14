@@ -1,0 +1,34 @@
+[project]
+name = "agent-in-action"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "colorlog>=6.9.0",
+    "dotenv>=0.9.9",
+    "fastapi>=0.115.12",
+    "ipykernel>=6.29.5",
+    "langchain>=0.3.25",
+    "langchain-community>=0.3.23",
+    "langchain-openai>=0.3.16",
+    "langgraph>=0.4.3",
+    "langgraph-supervisor>=0.0.21",
+    "lxml>=5.4.0",
+    "nest-asyncio>=1.6.0",
+    "notebook>=7.4.2",
+    "numpy>=2.2.5",
+    "pandas>=2.2.3",
+    "pydantic>=2.11.4",
+    "pyppeteer>=2.0.0",
+    "pytrends>=4.9.2",
+    "requests>=2.32.3",
+    "serpapi>=0.1.5",
+    "urllib3==1.26.15",
+    "uvicorn>=0.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.8",
+]

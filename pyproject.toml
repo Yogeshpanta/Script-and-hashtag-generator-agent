@@ -19,6 +19,7 @@ dependencies = [
     "notebook>=7.4.2",
     "numpy>=2.2.5",
     "pandas>=2.2.3",
+    "pillow>=11.2.1",
     "pydantic>=2.11.4",
     "pyppeteer>=2.0.0",
     "pytrends>=4.9.2",

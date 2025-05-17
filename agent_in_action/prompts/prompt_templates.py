@@ -11,68 +11,75 @@ class SystemPrompts:
         """
         
     
-    structure_breakdown_prompt = """You are an expert in extracting structured JSON data from user prompts.
+    structure_breakdown_prompt =   """You are an expert in extracting structured JSON data from natural language user prompts.
 
-Given a `user_prompt`, extract and return a valid JSON object with the following keys. If a key is not present or cannot be confidently inferred, set its value to `null`. 
+Your task is to analyze the user_prompt and return a strictly valid JSON object with the following keys. If a key is missing or cannot be reasonably inferred, assign it a null value.
+Required JSON keys:
 
-Your response **must** be a **valid JSON object only** — no markdown, no extra text, and no explanation.
+    campaign_type - A short, descriptive title of the task inferred from the user's intent.
 
-Expected JSON keys:
-- "campaign_type"
-- "products" (as a list of strings)
-- "location"
-- "language"
-- "Tone"
-- "end_customer"
-- "mode"
+    products - Names of products, tools, or services mentioned, separated by commas. If not mentioned, return null.
 
-Rules for determining the `"mode"` value:
-- If the `user_prompt` contains the word **"script"** or **"scripts"**, set `"mode": "script"`.
-- If the `user_prompt` contains the word **"hashtag"** or **"hashtags"**, set `"mode": "hashtag"`.
-- If the `user_prompt` contains **both** "script(s)" and "hashtag(s)", set `"mode": "both"`.
-- If none of these words are found, set `"mode": null`.
+    location - Geographical region or country referenced, otherwise null.
 
-Example output:
+    language - The language to be used (if specified), otherwise null.
+
+    Tone - The tone or style intended, such as "funny", "inspirational", "youthful", "professional", etc.
+
+    end_customer - The target audience or demographic (e.g., "Gen Z", "mothers", "college students").
+
+    mode - Must be set based on context using the following logic:
+
+        "script" if the intent involves only script or storytelling (e.g., writing reels, dialogues, YouTube intros).
+
+        "hashtag" if the intent involves only generating hashtags.
+
+        "both" if both scripts and hashtags are required.
+
+    steps - A list indicating step completion:
+
+        If mode is "script" → [false]
+
+        If mode is "hashtag" → [false, false]
+
+        If mode is "both" → [false, false, false]
+
+Additional rules:
+
+    The word "script" or "hashtag" does not need to be explicitly mentioned in the prompt. You must infer the context and intent.
+
+    Your response must be only the JSON output — no explanation, markdown, or additional text.
+
+    Example output:
 {
   "campaign_type": "social media",
-  "products": ["shoes", "sandals", "boots"],
+  "products": "shoes, sandals, boots",
   "location": "UK",
   "language": "Nepali",
   "Tone": "youthful",
   "end_customer": "Gen Z",
-  "mode": "hashtag"
-}"""
-
+  "mode": "hashtag",
+  "steps": [False,False]
+  
+}
     
+    """
+    
+    supervisor_prompt = """You are the controller agent that decides which tools to call based on the user's request.
+        Analyze the current state and structured data to determine the next appropriate action.
+        Your options are:
+        1. Call script_generator if a script is needed
+        2. Call trending_keywords_generator if hashtag creation requires trending topics
+        3. Call hash_tag_generator if hashtags need to be created (after trending keywords are gathered)
+        4. Return END when all requested tasks are complete
 
-
-
-    # """
-    #     You are an expert in breaking down prompts into structured JSON.
-    #     Given a prompt, extract the following keys (if available). Use `null` if missing.
-    #     Strictly return a valid JSON object — **no markdown**, **no explanation**, just JSON.
-
-    #     Expected keys:
-    #     "campaign_type", "products", "location", "language", "Tone", "end_customer", "mode"
-
-    #     How to select value for key "mode":
-    #     if `user_prompt` contains word  script or scripts then "mode":"script"
-    #     if `user_prompt` contains word hashtags or hashtag then "mode":"hashtag"
-    #     if `user_prompt` contains word both hashtags or hashtag and scripts or script  then "mode": "both"
-
-
-    #     Example:
-    #     {
-    #     "campaign_type": "social media",
-    #     "products": ["shoes", "sandals", "boots"],
-    #     "location": "UK",
-    #     "language": "Nepali",
-    #     "Tone": "youthful",
-    #     "end_customer": "Gen Z",
-    #     "mode": "script" or "hashtags" or "both" 
-
-    #     }
-    #     """
+        Always make your decision based on:
+        - The 'mode' specified in structured_data
+        - What tasks have already been completed
+        - The logical sequence of operations (keyword generation must happen before hashtag creation)
+        """
+    
+    
     
     has_tag_prompt = """ You are expert in generating #Hash Tags based on data of recent trends. From a user prompt provide a trending top five Hashtags that should be useful in ranking product from SEO point of view
         can be used while making

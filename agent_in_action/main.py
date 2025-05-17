@@ -17,15 +17,14 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     user_input:AgentState = {
     "user_input": {
-        "campaign_type": "social media engagement",
-        "product": ["shoes", "sandals", "boots"],
-        "rough_theme": "I want to generate top five tags for above fashion in english language and location should be based on UK"
+        "user_prompt": "I want to write hastags for  a video titled :transformers in deep learning"
     },
     "structured_data": None,
     "generated_script": None,
     "hashtags": None,
     "messages": [],
     "current_agent": "user"
+
     }
 
     app = graph_builder_agent()

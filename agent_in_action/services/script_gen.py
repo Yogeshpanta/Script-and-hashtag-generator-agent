@@ -43,8 +43,8 @@ def script_generator(state:AgentState)->AgentState:
     script_detail = state["structured_data"]
 
     campaign_type = script_detail.get("campaign_type", "marekting")
-    products = script_detail.get("products", [])
-    product = ",".join([i for i in products])
+    product = script_detail.get("products"," ")
+    # product = ",".join([i for i in products])
     Language = script_detail.get("language", "english")
     Location = script_detail.get("location", "united states")
     Tone = script_detail.get("Tone", "general")

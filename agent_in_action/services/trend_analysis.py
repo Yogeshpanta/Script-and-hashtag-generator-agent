@@ -1,6 +1,7 @@
 import serpapi
 from agent_in_action.schemas.overall_state import AgentState
 from langchain.schema import AIMessage
+import pycountry
 # from langchain_core.tools import tool
 
 import os
@@ -35,6 +36,28 @@ load_dotenv()
 #         snippets = [item.get("snippet") for item in organic_results if item.get("snippet")]
 
 #         return " ,".join([i for i in snippets])
+
+def get_country_code(country_name):
+    try:
+        country = pycountry.countries.get(name=country_name)
+        if country is None:
+            country = pycountry.countries.search_fuzzy(country_name)[0]
+        return country.alpha_2.lower()  # <-- uppercase for SerpAPI 'gl' param
+    except LookupError:
+        return None
+
+def get_language_code(language_name):
+    try:
+        language = pycountry.languages.get(name=language_name)
+        if language is None:
+            language = pycountry.languages.search_fuzzy(language_name)[0]
+        # Some languages do not have alpha_2; fallback to language alpha_2 or first part of alpha_3
+        if hasattr(language, 'alpha_2'):
+            return language.alpha_2.lower()  # hl param lowercase
+        else:
+            return language.alpha_3[:2].lower()
+    except LookupError:
+        return None
     
 
 
@@ -65,16 +88,25 @@ def trending_keyword_generator(state:AgentState)->AgentState:
         Exception: If the SerpAPI search fails or returns no usable results.
     """
     required_keyword = state["structured_data"]
-    products = required_keyword.get("products", "marketing")
-    product = " ".join([i for i in products])
+    title = required_keyword.get("campaign_type", "marketing")
+    # product = " ".join([i for i in products])
+
+    language_name = required_keyword.get("language", "English")
+    location_name = required_keyword.get("location", "United States")
+
+    lang_code = get_language_code(language_name) or "en"
+    country_code = get_country_code(location_name) or "us"
+
     client = serpapi.Client(api_key=os.getenv("SERPAPI_KEY"))
     search = client.search(
                 engine = "google",
-                q = product,
+                q = title,
                 # hl = required_keyword.get("language", "en"),
-                # gl = required_keyword.get("location","us"),
-                hl = "en",
-                gl = "us"
+                # # gl = required_keyword.get("location","us"),
+                # hl = "en",
+                # gl = "us"
+                hl = lang_code,
+                gl = country_code
         )
 
     organic_results = search.get("organic_results", [])
@@ -84,33 +116,3 @@ def trending_keyword_generator(state:AgentState)->AgentState:
     return state
 
 
-
-# class TrendAnalysis:
-#     def __init__(self, keywords: str, host_lang: str, geo_location: str, api_key: str):
-#         self.keywords = keywords
-#         self.host_lang = host_lang
-#         self.geo_location = geo_location
-#         self.api_key = os.getenv("SERPAPI_KEY")
-
-#     def __str__(self):
-#         return "Analyzing the trends"
-
-#     def trending_keyword_generator(self) -> str:
-#         """Fetches top trending snippets based on the search keyword"""
-#         params = {
-#             "engine": "google",
-#             "q": self.keywords,
-#             "hl": self.host_lang,
-#             "gl": self.geo_location,
-#             "api_key": self.api_key
-#         }
-
-#         try:
-#             search = GoogleSearch(params)
-#             results = search.get_dict()
-#             organic_results = results.get("organic_results", [])
-#             snippets = [item.get("snippet") for item in organic_results if item.get("snippet")]
-
-#             return ", ".join(snippets) if snippets else "No trending snippets found."
-#         except Exception as e:
-#             return f"An error occurred while fetching trends: {e}"

@@ -8,9 +8,7 @@ from langgraph.graph import END
 
 class UserInput(TypedDict):
     """class where a user input are given"""
-    campaign_type:str
-    product:list[str]
-    rough_theme:str
+    user_prompt:str
 
 class AgentState(TypedDict):
     """Main state for the entire workflow"""

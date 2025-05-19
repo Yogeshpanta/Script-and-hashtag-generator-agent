@@ -16,7 +16,7 @@ class SystemPrompts:
 Your task is to analyze the user_prompt and return a strictly valid JSON object with the following keys. If a key is missing or cannot be reasonably inferred, assign it a null value.
 Required JSON keys:
 
-    campaign_type - A short, descriptive title of the task inferred from the user's intent.
+    campaign_title - A short, descriptive title of the task inferred from the user's intent.
 
     products - Names of products, tools, or services mentioned, separated by commas. If not mentioned, return null.
 
@@ -52,7 +52,7 @@ Additional rules:
 
     Example output:
 {
-  "campaign_type": "social media",
+  "campaign_title": "social media",
   "products": "shoes, sandals, boots",
   "location": "UK",
   "language": "Nepali",
@@ -64,6 +64,18 @@ Additional rules:
 }
     
     """
+
+#     structure_breakdown_prompt = """
+# You are an assistant that extracts structured data for a marketing campaign video. From the given user prompt, extract the following fields as JSON:
+# - campaign_title (string): create a title if it's not directly present
+# - products (list): mention if not available
+# - location (string): default to None if not present
+# - language (string): default to None if not present
+# - tone (string)
+# - end_customer (string)
+# - mode (string): video, hashtag, etc.
+# - steps (list of bool or strings): processing steps if provided
+# """
     
     supervisor_prompt = """You are the controller agent that decides which tools to call based on the user's request.
         Analyze the current state and structured data to determine the next appropriate action.
@@ -81,29 +93,51 @@ Additional rules:
     
     
     
-    has_tag_prompt = """ You are expert in generating #Hash Tags based on data of recent trends. From a user prompt provide a trending top five Hashtags that should be useful in ranking product from SEO point of view
-        can be used while making
+    has_tag_prompt = """ You are expert in generating #Hash Tags based on data of recent trends. From a user prompt provide five trending hashtags, that might be useful while making video in that relative title.
+        Also, give the result in json object format ## strictly follow json object ##
         videos using '#" symbol:
         **Example
-        #keyword 
+        { 
+        "hashtags": [#keyword1, #keyword2]
+        }
+        
     """
-    node_executer_prompt = """ You are expert in decision making who knows which node to execute at respoective situation. Use following  conditions
-    to execute the code  ## conditions##
-    step 1: go through the user prompt and see the words like "script", "hashtag" or "script" and "hashtag".
-    step 2:
-                if only, "script" is mentioned in prompt
-                    - execute the script_generator node and END the execution
-                
-                if only, "hashtag" is mentioned in prompt:
-                    - first, execute 'trending_keyword_generator' node to extract keyword
-                    - Secondly, execute the "hashtag_generator" node to generate hashtags
-                    - Finally, END the execution
+    node_executer_agent = """You are a helpful assistant that creates scripts and relevant hashtags based on the user's prompt. Your job is to return a valid JSON output that defines which node(s) to execute.
 
-                if both i.e. "script" and "hashtag" are mentioned in prompt
-                    - firstly, execute "trending_keyword_generator" node to extract keyword
-                    - secondly, execute " hashtag_generator" node to generate hashtags
-                    - thirdly, execute "script_generator" node to generate script
-                    - finally, stop the execution
-                You have to decide which node to execute when and when to stop the execution.
-    
-    """
+Read the user prompt and determine if they want:
+- only a script
+- only hashtags
+- or both script and hashtags
+
+Then return a JSON with the following structure:
+{
+  "objective": "script" | "hashtag" | "script_and_hashtag",
+  "steps": [false, false, false] // Length and order must match objective
+}
+
+Rules:
+- If the user wants only a script, return:
+  {
+    "objective": "script",
+    "steps": [false]
+  }
+
+- If the user wants only hashtags, return:
+  {
+    "objective": "hashtag",
+    "steps": [false, false]  // [trendy_keyword_analyzer, hash_tag_generator]
+  }
+
+- If the user wants both, return:
+  {
+    "objective": "script_and_hashtag",
+    "steps": [false, false, false] // [script, trend, hashtag]
+  }
+
+IMPORTANT: You MUST return only the JSON object with no explanation or extra text.
+Example (for hashtag only):
+{
+  "objective": "hashtag",
+  "steps": [false, false]
+}
+"""

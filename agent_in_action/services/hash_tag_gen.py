@@ -1,6 +1,7 @@
 from agent_in_action.prompts.prompt_templates import SystemPrompts
 # from agent_in_action.schemas.hash_tag_schema import HashInput, HashTagOutput
 from agent_in_action.schemas.overall_state import AgentState
+import logging
 # from langchain_core.tools import tool
 
 from langchain_openai import ChatOpenAI
@@ -41,11 +42,13 @@ def hash_tag_generator(state:AgentState) -> AgentState:
 
     trendy_keywords = state["trendy_keywords"]
     prompt = f"""Provide the top five hashtags for these topics {trendy_keywords}"""
+    logging.info("generating hashtags from trending keyword")
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.8, api_key=openai_api_key)
     response = llm(
         [SystemMessage(content=SystemPrompts.has_tag_prompt),
         HumanMessage(content=prompt)]
     )
     state["hashtags"] = response.content
+    logging.info("hashtags generated")
     state["messages"].append(AIMessage(content=f"Generated hashtags for given video:{response.content}"))
     return state

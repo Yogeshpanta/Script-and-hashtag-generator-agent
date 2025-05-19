@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 if __name__ == "__main__":
     user_input:AgentState = {
     "user_input": {
-        "user_prompt": "I want to write hastags for  a video titled :transformers in deep learning"
+        "user_prompt": "I want to generate a scripts and hashtags for about 15 sec video, about the title: 'transformer in deep learning'"
     },
     "structured_data": None,
     "generated_script": None,

@@ -6,6 +6,7 @@ from langchain_core.tools import tool
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
+import logging
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -42,7 +43,7 @@ def script_generator(state:AgentState)->AgentState:
     print("Generating the scripts for the given title")
     script_detail = state["structured_data"]
 
-    campaign_type = script_detail.get("campaign_type", "marekting")
+    campaign_type = script_detail.get("campaign_title")
     product = script_detail.get("products"," ")
     # product = ",".join([i for i in products])
     Language = script_detail.get("language", "english")
@@ -60,6 +61,7 @@ Generate a compelling and engaging video script that aligns with these specifica
     
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.9, api_key=openai_api_key)
     response = llm([SystemMessage(content=SystemPrompts.script_generator_prompt),HumanMessage(content=prompt)])
+    logging.info("generating a scripts")
 
     state["generated_script"] = response.content
     state["messages"].append(AIMessage(content=f"script generated for video:{response.content}"))

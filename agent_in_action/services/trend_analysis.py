@@ -1,6 +1,7 @@
 import serpapi
 from agent_in_action.schemas.overall_state import AgentState
 from langchain.schema import AIMessage
+import logging
 import pycountry
 # from langchain_core.tools import tool
 
@@ -88,7 +89,8 @@ def trending_keyword_generator(state:AgentState)->AgentState:
         Exception: If the SerpAPI search fails or returns no usable results.
     """
     required_keyword = state["structured_data"]
-    title = required_keyword.get("campaign_type", "marketing")
+    title = required_keyword.get("campaign_title")
+    print(title)
     # product = " ".join([i for i in products])
 
     language_name = required_keyword.get("language", "English")
@@ -103,16 +105,19 @@ def trending_keyword_generator(state:AgentState)->AgentState:
                 q = title,
                 # hl = required_keyword.get("language", "en"),
                 # # gl = required_keyword.get("location","us"),
-                # hl = "en",
-                # gl = "us"
-                hl = lang_code,
-                gl = country_code
+                hl = "en",
+                gl = "us"
+                # hl = lang_code,
+                # gl = country_code
         )
+    logging.info("trending words is being extracted")
 
     organic_results = search.get("organic_results", [])
     snippets = [item.get("snippet") for item in organic_results if item.get("snippet")]
     state["trendy_keywords"] = " ,".join([i for i in snippets])
+    print(state["trendy_keywords"])
     state["messages"].append(AIMessage(content= f"trendy keyword generated: {state['trendy_keywords']}"))
+    logging.info("trending words extracted")
     return state
 
 

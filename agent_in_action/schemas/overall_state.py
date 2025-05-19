@@ -10,12 +10,17 @@ class UserInput(TypedDict):
     """class where a user input are given"""
     user_prompt:str
 
+class StepGeneration(TypedDict):
+    """class which generates objectives and steps"""
+
 class AgentState(TypedDict):
     """Main state for the entire workflow"""
     # Original user input
     user_input: Optional[UserInput]
     # Structured data from user input
     structured_data: Optional[Dict[str, Any]]
+    # steps generation
+    steps_genaration: Optional[StepGeneration]
     # Script generated based on structured data
     generated_script: Optional[str]
     # inputs for hashtag generatiion

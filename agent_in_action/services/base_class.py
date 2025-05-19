@@ -10,6 +10,7 @@ from agent_in_action.services.script_gen import script_generator
 from agent_in_action.services.trend_analysis import trending_keyword_generator
 from agent_in_action.services.sturct_break import structure_generator
 from langgraph.graph import END
+import json
 import logging
 
 import os
@@ -118,155 +119,224 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
     
 #     return state
 
+# def supervisor_node(state: AgentState):
+#     """
+#     Orchestrates the execution of tool functions (script generation, keyword extraction,
+#     and hashtag generation) based on structured data in the agent state.
+
+#     Args:
+#         state (AgentState): Current workflow state including input, structured data, and history.
+
+#     Returns:
+#         AgentState: Updated state after executing necessary tools.
+
+#     Raises:
+#         ValueError: If steps are missing or all are already marked True.
+#     """
+    
+#     try:
+#         details = state["structured_data"]
+#         mode = details.get("mode")  # Default to 'script' if not specified
+#         steps = details.get("steps", [])
+
+#         # Log the start of supervisor execution
+#         logging.info("executing the supervisor node to execute another ndoe")
+#         state["messages"].append(AIMessage(content=f"Supervisor node executing in {mode} mode"))
+
+#         if not steps or all(steps):
+#             raise ValueError("You must specify the steps and set at least one as False.")
+
+#         if mode == "script" and len(steps) == 1:
+#             logging.info("generting scripts")
+#             if not steps[0]:
+#                 state = script_generator(state)
+#                 state["structured_data"]["steps"][0] = True
+#             else:
+#                 return "All steps are already completed. Cannot generate script again."
+
+#         elif mode == "hashtag" and len(steps) == 2:
+#             logging.info("generating hashtags using trending keywords")
+#             if not steps[0]:
+#                 state = trending_keyword_generator(state)
+#                 state["structured_data"]["steps"][0] = True
+
+#             if not steps[1] and "trendy_keywords" in state and state["trendy_keywords"]:
+#                 state = hash_tag_generator(state)
+#                 state["structured_data"]["steps"][1] = True
+#             elif not steps[1]:
+#                 return "Cannot generate hashtags because 'trendy_keywords' are missing."
+
+#         elif mode == "both" and len(steps) == 3:
+#             logging.info("generating both scripts and hashtags from user input")
+#             if not steps[0]:
+#                 state = script_generator(state)
+#                 state["structured_data"]["steps"][0] = True
+
+#             if not steps[1]:
+#                 state = trending_keyword_generator(state)
+#                 state["structured_data"]["steps"][1] = True
+
+#             if not steps[2] and "trendy_keywords" in state and state["trendy_keywords"]:
+#                 state = hash_tag_generator(state)
+#                 state["structured_data"]["steps"][2] = True
+#             elif not steps[2]:
+#                 return "Cannot generate hashtags because 'trendy_keywords' are missing."
+
+#         else:
+#             return f"Unsupported mode: {mode}. Please use 'script', 'hashtag', or 'both'."
+
+#         return state
+
+#     except KeyError as ke:
+#         raise KeyError(f"Missing required key in structured_data: {ke}")
+#     except Exception as e:
+#         raise Exception(f"Supervisor execution failed: {e}")
+
+
+
+
+
+# def supervisor_node(state: AgentState):
+#     """
+#     Orchestrates the execution of tool functions (script generation, keyword extraction,
+#     and hashtag generation) based on structured data in the agent state.
+
+#     Args:
+#         state (AgentState): Current workflow state including input, structured data, and history.
+
+#     Returns:
+#         AgentState: Updated state after executing necessary tools.
+
+#     Raises:
+#         ValueError: If steps are missing or all are already marked True.
+#     """
+
+#     llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
+#     response = llm.invoke([SystemMessage(content=SystemPrompts.node_executer_agent)])
+#     state["steps_genaration"] = response.content
+#     details = state["steps_genaration"]
+#     mode = details.get("objective")
+#     steps = details.get("steps",[])
+
+#     try:
+#         details = state["structured_data"]
+#         mode = details.get("mode")  # Default to 'script' if not specified
+#         steps = details.get("steps", [])
+
+#         # Log the start of supervisor execution
+#         logging.info("executing the supervisor node to execute another ndoe")
+#         state["messages"].append(AIMessage(content=f"Supervisor node executing in {mode} mode"))
+
+#         if not steps or all(steps):
+#             raise ValueError("You must specify the steps and set at least one as False.")
+
+#         if mode == "script" and len(steps) == 1:
+#             logging.info("generting scripts")
+#             if not steps[0]:
+#                 state = script_generator(state)
+#                 state["steps_genaration"]["steps"][0] = True
+#             else:
+#                 return "All steps are already completed. Cannot generate script again."
+
+#         elif mode == "hashtag" and len(steps) == 2:
+#             logging.info("generating hashtags using trending keywords")
+#             if not steps[0]:
+#                 state = trending_keyword_generator(state)
+#                 state["steps_genaration"]["steps"][0] = True
+
+#             if not steps[1] and "trendy_keywords" in state and state["trendy_keywords"]:
+#                 state = hash_tag_generator(state)
+#                 state["steps_genaration"]["steps"][1] = True
+#             elif not steps[1]:
+#                 return "Cannot generate hashtags because 'trendy_keywords' are missing."
+
+#         elif mode == "script_and_hashtag" and len(steps) == 3:
+#             logging.info("generating both scripts and hashtags from user input")
+#             if not steps[0]:
+#                 state = script_generator(state)
+#                 state["steps_genaration"]["steps"][0] = True
+
+#             if not steps[1]:
+#                 state = trending_keyword_generator(state)
+#                 state["steps_genaration"]["steps"][1] = True
+
+#             if not steps[2] and "trendy_keywords" in state and state["trendy_keywords"]:
+#                 state = hash_tag_generator(state)
+#                 state["steps_genaration"]["steps"][2] = True
+#             elif not steps[2]:
+#                 return "Cannot generate hashtags because 'trendy_keywords' are missing."
+
+#         else:
+#             return f"Unsupported mode: {mode}. Please use 'script', 'hashtag', or 'both'."
+
+#         return state
+
+#     except KeyError as ke:
+#         raise KeyError(f"Missing required key in structured_data: {ke}")
+#     except Exception as e:
+#         raise Exception(f"Supervisor execution failed: {e}")
+
 def supervisor_node(state: AgentState):
     """
-    Orchestrates the execution of tool functions (script generation, keyword extraction,
-    and hashtag generation) based on structured data in the agent state.
+    Orchestrates execution of tool functions based on user input and LLM-decided execution plan.
 
     Args:
-        state (AgentState): Current workflow state including input, structured data, and history.
+        state (AgentState): Workflow state containing input, structured data, etc.
 
     Returns:
-        AgentState: Updated state after executing necessary tools.
-
-    Raises:
-        ValueError: If steps are missing or all are already marked True.
+        AgentState: Updated workflow state after executing required tools.
     """
-    
+
     try:
-        details = state["structured_data"]
-        mode = details.get("mode")  # Default to 'script' if not specified
-        steps = details.get("steps", [])
+        # Step 1: Ask LLM which nodes should be executed
+        llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
+        planning_response = llm.invoke([
+            SystemMessage(content=SystemPrompts.node_executer_agent),
+            HumanMessage(content=state["user_input"]["user_prompt"])
+        ])
 
-        # Log the start of supervisor execution
-        state["messages"].append(AIMessage(content=f"Supervisor node executing in {mode} mode"))
+        # Step 2: Parse the LLM response and extract the execution plan
+        plan = json.loads(planning_response.content)
+        mode = plan.get("mode") or plan.get("objective")  # alias support
+        logging.info(f"Supervisor mode: {mode}")
 
-        if not steps or all(steps):
-            raise ValueError("You must specify the steps and set at least one as False.")
+        # Save mode to structured data for traceability
+        # state["structured_data"] = {
+        #     "mode": mode
+        # }
 
-        if mode == "script" and len(steps) == 1:
-            if not steps[0]:
-                state = script_generator(state)
-                state["structured_data"]["steps"][0] = True
+        # Step 3: Execute specific tools based on the mode
+        if mode == "script":
+            logging.info("Executing script generator node...")
+            state = script_generator(state)
+
+        elif mode == "hashtag":
+            logging.info("Executing trending keyword and hashtag generator nodes...")
+            state = trending_keyword_generator(state)
+
+            if "trendy_keywords" in state and state["trendy_keywords"]:
+                state = hash_tag_generator(state)
             else:
-                return "All steps are already completed. Cannot generate script again."
+                return "Trending keywords missing. Cannot generate hashtags."
 
-        elif mode == "hashtag" and len(steps) == 2:
-            if not steps[0]:
-                state = trending_keyword_generator(state)
-                state["structured_data"]["steps"][0] = True
+        elif mode == "script_and_hashtag":
+            logging.info("Executing full pipeline: script ➝ keywords ➝ hashtags...")
+            state = script_generator(state)
+            state = trending_keyword_generator(state)
 
-            if not steps[1] and "trendy_keywords" in state and state["trendy_keywords"]:
+            if "trendy_keywords" in state and state["trendy_keywords"]:
                 state = hash_tag_generator(state)
-                state["structured_data"]["steps"][1] = True
-            elif not steps[1]:
-                return "Cannot generate hashtags because 'trendy_keywords' are missing."
-
-        elif mode == "both" and len(steps) == 3:
-            if not steps[0]:
-                state = script_generator(state)
-                state["structured_data"]["steps"][0] = True
-
-            if not steps[1]:
-                state = trending_keyword_generator(state)
-                state["structured_data"]["steps"][1] = True
-
-            if not steps[2] and "trendy_keywords" in state and state["trendy_keywords"]:
-                state = hash_tag_generator(state)
-                state["structured_data"]["steps"][2] = True
-            elif not steps[2]:
-                return "Cannot generate hashtags because 'trendy_keywords' are missing."
+            else:
+                return "Trending keywords missing. Cannot generate hashtags."
 
         else:
-            return f"Unsupported mode: {mode}. Please use 'script', 'hashtag', or 'both'."
+            return f"Unsupported mode: {mode}. Use 'script', 'hashtag', or 'script_and_hashtag'."
 
         return state
 
+    except json.JSONDecodeError:
+        raise ValueError("LLM response is not a valid JSON. Check the system prompt formatting.")
     except KeyError as ke:
-        raise KeyError(f"Missing required key in structured_data: {ke}")
+        raise KeyError(f"Missing expected field in plan: {ke}")
     except Exception as e:
         raise Exception(f"Supervisor execution failed: {e}")
-
-# def supervisor_node(state: AgentState) -> AgentState:
-#     """
-#     Intelligent supervisor that decides which tool to call next based on the current state.
-#     Uses LLM to make decisions rather than hardcoded rules.
-#     """
-#     # Check if we have structured data
-#     if "structured_data" not in state or not state["structured_data"]:
-#         state = structure_generator(state)
-    
-#     # Get current progress
-#     details = state["structured_data"]
-#     mode = details.get("mode", "script")  # Default to 'script' if not specified
-    
-#     # Track what's already been done
-#     script_done = "generated_script" in state and state["generated_script"]
-#     trend_done = "trendy_keywords" in state and state["trendy_keywords"]
-#     hashtags_done = "hashtags" in state and state["hashtags"]
-    
-#     # Get OpenAI API key from environment variable
-#     openai_api_key = os.getenv("OPENAI_API_KEY")
-#     if not openai_api_key:
-#         raise ValueError("OPENAI_API_KEY environment variable not set")
-    
-#     # Use LLM to decide next action if there's still work to do
-#     if (mode == "script" and not script_done) or \
-#        (mode == "hashtag" and (not trend_done or not hashtags_done)) or \
-#        (mode == "both" and (not script_done or not trend_done or not hashtags_done)):
-        
-#         # Create status summary for LLM
-#         status = {
-#             "mode": mode,
-#             "script_generated": script_done,
-#             "trending_keywords_generated": trend_done,
-#             "hashtags_generated": hashtags_done
-#         }
-        
-#         status_prompt = f"""Current workflow status:
-# Mode: {mode}
-# Script generated: {script_done}
-# Trending keywords generated: {trend_done}
-# Hashtags generated: {hashtags_done}
-
-# Based on this status, what is the next action that should be taken? Choose one of:
-# 1. "script_generator" - Generate a script (can be done independently)
-# 2. "trending_keywords_generator" - Get trending keywords (required before hashtag generation)
-# 3. "hash_tag_generator" - Generate hashtags (requires trending keywords to be done first)
-# 4. "END" - All required tasks are complete
-
-# Respond with ONLY ONE of these exact options. Do not add any explanation.
-# """
-        
-#         llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.1, api_key=openai_api_key)
-#         response = llm.invoke([
-#             {"role": "system", "content": SystemPrompts.supervisor_prompt},
-#             {"role": "user", "content": status_prompt}
-#         ])
-        
-#         next_action = response.content.strip().lower()
-#         state["messages"].append(AIMessage(content=f"Supervisor decided next action: {next_action}"))
-        
-#         # Execute the chosen action
-#         if "script_generator" in next_action and not script_done:
-#             state = script_generator(state)
-#         elif "trending_keywords_generator" in next_action and not trend_done:
-#             state = trending_keyword_generator(state)
-#         elif "hash_tag_generator" in next_action and trend_done and not hashtags_done:
-#             state = hash_tag_generator(state)
-#         elif "end" in next_action or next_action == "end":
-#             state["messages"].append(AIMessage(content="All requested tasks completed successfully."))
-#             state["current_agent"] = END
-#             return state
-#         else:
-#             state["messages"].append(AIMessage(content=f"Unrecognized or invalid next action: '{next_action}'. Ending workflow."))
-#             state["current_agent"] = END
-#             return state
-        
-#         # Recursively call supervisor to continue the workflow
-#         return supervisor_node(state)
-#     else:
-#         # All tasks for the current mode are complete
-#         state["messages"].append(AIMessage(content=f"All tasks for mode '{mode}' completed successfully."))
-#         state["current_agent"] = END
-#         return state

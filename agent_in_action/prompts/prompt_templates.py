@@ -93,13 +93,20 @@ Additional rules:
     
     
     
-    has_tag_prompt = """ You are expert in generating #Hash Tags based on data of recent trends. From a user prompt provide five trending hashtags, that might be useful while making video in that relative title.
-        Also, give the result in json object format ## strictly follow json object ##
-        videos using '#" symbol:
-        **Example
-        { 
-        "hashtags": [#keyword1, #keyword2]
-        }
+    has_tag_prompt = """ You are an expert in generating trending hashtags based on recent data.
+
+From the given user prompt, provide five relevant and trending hashtags that can be used when creating a video related to that prompt.
+
+Important:
+- Format the output strictly as a **valid JSON object**
+- Use double quotes around all strings and hashtags
+- Do NOT include any explanation or extra text
+
+Example format (strictly follow this):
+{
+  "hashtags": ["#AI", "#MachineLearning", "#DataScience", "#TechNews", "#FutureOfWork"]
+}
+
         
     """
     node_executer_agent = """You are a helpful assistant that creates scripts and relevant hashtags based on the user's prompt. Your job is to return a valid JSON output that defines which node(s) to execute.

@@ -1,17 +1,28 @@
 # from typing import TypedDict
 from typing_extensions import TypedDict
+from pydantic import BaseModel
 from typing import Optional, Dict, Any, List, Annotated, Literal
 from langchain.schema import HumanMessage, AIMessage
 # from agent_in_action.schemas.structure_gen import UserInput, UserPromptBreakdown
 from langgraph.graph import END
 
 
-class UserInput(TypedDict):
-    """class where a user input are given"""
-    user_prompt:str
+# class UserInput(TypedDict):
+#     """class where a user input are given"""
+#     user_prompt:str
+class UserInput(BaseModel):
+    user_prompt: str
+
+class GenerateResponse(BaseModel):
+    generated_script: Optional[str] = None
+    hashtags: Optional[List[str]] = None
 
 class StepGeneration(TypedDict):
     """class which generates objectives and steps"""
+
+class GenerateScript(TypedDict):
+    """This is the model where output is generated"""
+    script:Dict[str, Any]
 
 class AgentState(TypedDict):
     """Main state for the entire workflow"""

@@ -1,15 +1,12 @@
 from agent_in_action.schemas.overall_state import AgentState
 from agent_in_action.prompts.prompt_templates import SystemPrompts
-from langchain.schema import SystemMessage, HumanMessage, AIMessage
+from langchain.schema import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
-from langchain_core.tools import tool
 from agent_in_action.configs.logging_config import setup_logging
 
 from agent_in_action.services.hash_tag_gen import hash_tag_generator
 from agent_in_action.services.script_gen import script_generator
 from agent_in_action.services.trend_analysis import trending_keyword_generator
-from agent_in_action.services.sturct_break import structure_generator
-from langgraph.graph import END
 import json
 import logging
 
@@ -23,26 +20,26 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # def supervisor_node(state:AgentState):
 #     """
-#     Acts as the central controller that orchestrates the execution of other tool functions 
-#     (script generation, trending keyword extraction, and hashtag generation) based on the 
+#     Acts as the central controller that orchestrates the execution of other tool functions
+#     (script generation, trending keyword extraction, and hashtag generation) based on the
 #     structured data provided in the agent state.
 
-#     This function reads key details such as mode, campaign type, and products from the 
-#     `structured_data` field of the agent state to formulate a natural language prompt. 
-#     It then invokes a language model (ChatOpenAI) that is configured with access to a set 
+#     This function reads key details such as mode, campaign type, and products from the
+#     `structured_data` field of the agent state to formulate a natural language prompt.
+#     It then invokes a language model (ChatOpenAI) that is configured with access to a set
 #     of tools: `script_generator`, `trending_keyword_generator`, and `hash_tag_generator`.
 
-#     The language model determines the appropriate tools to call and sequences them 
-#     accordingly to generate the required output (e.g., scripts, hashtags). The function 
-#     appends an `AIMessage` to the `messages` list to log the supervisory action and the 
+#     The language model determines the appropriate tools to call and sequences them
+#     accordingly to generate the required output (e.g., scripts, hashtags). The function
+#     appends an `AIMessage` to the `messages` list to log the supervisory action and the
 #     content generated or delegated to tools.
 
 #     Args:
-#         state (AgentState): The current state of the workflow, including user input, 
+#         state (AgentState): The current state of the workflow, including user input,
 #                             structured data, and message history.
 
 #     Returns:
-#         AgentState: The updated agent state with a new AI message indicating that the 
+#         AgentState: The updated agent state with a new AI message indicating that the
 #                     supervisor node has processed the input and triggered tool execution.
 
 #     Raises:
@@ -76,28 +73,28 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 #     Acts as the central controller that orchestrates the execution of other tool functions
 #     (script generation, trending keyword extraction, and hashtag generation) based on the
 #     structured data provided in the agent state.
-    
+
 #     This function reads key details such as mode, campaign type, and products from the
 #     `structured_data` field of the agent state and directly calls the appropriate tools
 #     based on the requested mode.
-    
+
 #     Args:
 #         state (AgentState): The current state of the workflow, including user input,
 #         structured data, and message history.
-        
+
 #     Returns:
 #         AgentState: The updated agent state after executing the requested tools.
-        
+
 #     Raises:
 #         KeyError: If `structured_data` or its required fields are missing from the state.
 #         Exception: If tool invocation fails.
 #     """
 #     details = state["structured_data"]
 #     mode = details.get("mode")  # Default to script if not specified
-    
+
 #     # Log the start of supervisor execution
 #     state["messages"].append(AIMessage(content=f"Supervisor node executing in {mode} mode"))
-    
+
 #     # Execute based on mode
 #     if mode == "script" or mode == "scripts":
 #         # Generate script
@@ -116,7 +113,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 #     else:
 #         # Log unsupported mode
 #         state["messages"].append(AIMessage(content=f"Unsupported mode: {mode}. Please use 'script', 'hashtag', or 'both'."))
-    
+
 #     return state
 
 # def supervisor_node(state: AgentState):
@@ -133,7 +130,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 #     Raises:
 #         ValueError: If steps are missing or all are already marked True.
 #     """
-    
+
 #     try:
 #         details = state["structured_data"]
 #         mode = details.get("mode")  # Default to 'script' if not specified
@@ -191,9 +188,6 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 #         raise KeyError(f"Missing required key in structured_data: {ke}")
 #     except Exception as e:
 #         raise Exception(f"Supervisor execution failed: {e}")
-
-
-
 
 
 # def supervisor_node(state: AgentState):
@@ -276,6 +270,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 #     except Exception as e:
 #         raise Exception(f"Supervisor execution failed: {e}")
 
+
 def supervisor_node(state: AgentState):
     """
     Orchestrates execution of tool functions based on user input and LLM-decided execution plan.
@@ -290,14 +285,17 @@ def supervisor_node(state: AgentState):
     try:
         # Step 1: Ask LLM which nodes should be executed
         llm = ChatOpenAI(model="gpt-4o-mini", api_key=openai_api_key)
-        planning_response = llm.invoke([
-            SystemMessage(content=SystemPrompts.node_executer_agent),
-            HumanMessage(content=state["user_input"]["user_prompt"])
-        ])
+        planning_response = llm.invoke(
+            [
+                SystemMessage(content=SystemPrompts.node_executer_agent),
+                HumanMessage(content=state["user_input"]["user_prompt"]),
+            ]
+        )
 
         # Step 2: Parse the LLM response and extract the execution plan
         plan = json.loads(planning_response.content)
-        mode = plan.get("mode") or plan.get("objective")  # alias support
+        # mode = plan.get("mode") or plan.get("objective")  # alias support
+        mode = plan.get("objective")
         logging.info(f"Supervisor mode: {mode}")
 
         # Save mode to structured data for traceability
@@ -335,7 +333,9 @@ def supervisor_node(state: AgentState):
         return state
 
     except json.JSONDecodeError:
-        raise ValueError("LLM response is not a valid JSON. Check the system prompt formatting.")
+        raise ValueError(
+            "LLM response is not a valid JSON. Check the system prompt formatting."
+        )
     except KeyError as ke:
         raise KeyError(f"Missing expected field in plan: {ke}")
     except Exception as e:

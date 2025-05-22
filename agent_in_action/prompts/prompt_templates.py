@@ -9,9 +9,8 @@ class SystemPrompts:
         so on ... 
         }
         """
-        
-    
-    structure_breakdown_prompt =   """You are an expert in extracting structured JSON data from natural language user prompts.
+
+    structure_breakdown_prompt = """You are an expert in extracting structured JSON data from natural language user prompts.
 
 Your task is to analyze the user_prompt and return a strictly valid JSON object with the following keys. If a key is missing or cannot be reasonably inferred, assign it a null value.
 Required JSON keys:
@@ -58,25 +57,26 @@ Additional rules:
   "language": "Nepali",
   "Tone": "youthful",
   "end_customer": "Gen Z",
-  "mode": "hashtag",
-  "steps": [False,False]
+ 
   
 }
     
     """
 
-#     structure_breakdown_prompt = """
-# You are an assistant that extracts structured data for a marketing campaign video. From the given user prompt, extract the following fields as JSON:
-# - campaign_title (string): create a title if it's not directly present
-# - products (list): mention if not available
-# - location (string): default to None if not present
-# - language (string): default to None if not present
-# - tone (string)
-# - end_customer (string)
-# - mode (string): video, hashtag, etc.
-# - steps (list of bool or strings): processing steps if provided
-# """
-    
+    #     structure_breakdown_prompt = """
+    # You are an assistant that extracts structured data for a marketing campaign video. From the given user prompt, extract the following fields as JSON:
+    # - campaign_title (string): create a title if it's not directly present
+    # - products (list): mention if not available
+    # - location (string): default to None if not present
+    # - language (string): default to None if not present
+    # - tone (string)
+    #  "mode": "hashtag",
+    #   "steps": [False,False]
+    # - end_customer (string)
+    # - mode (string): video, hashtag, etc.
+    # - steps (list of bool or strings): processing steps if provided
+    # """
+
     supervisor_prompt = """You are the controller agent that decides which tools to call based on the user's request.
         Analyze the current state and structured data to determine the next appropriate action.
         Your options are:
@@ -90,9 +90,7 @@ Additional rules:
         - What tasks have already been completed
         - The logical sequence of operations (keyword generation must happen before hashtag creation)
         """
-    
-    
-    
+
     has_tag_prompt = """ You are an expert in generating trending hashtags based on recent data.
 
 From the given user prompt, provide five relevant and trending hashtags that can be used when creating a video related to that prompt.

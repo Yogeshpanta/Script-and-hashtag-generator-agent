@@ -1,8 +1,6 @@
 import logging
 from agent_in_action.configs.logging_config import setup_logging
 
-from agent_in_action.graph_builder import graph_builder_agent
-from agent_in_action.schemas.overall_state import AgentState
 from fastapi import FastAPI
 from agent_in_action.routes import api_routing
 import uvicorn
@@ -36,12 +34,12 @@ logger = logging.getLogger(__name__)
 #     print(result["generated_script"])
 
 app = FastAPI(
-    title= "Agent for script and hashtag generation",
-    description= "API For generating hastag and scripts based on prompts"
+    title="Agent for script and hashtag generation",
+    description="API For generating hastag and scripts based on prompts",
 )
 
 app.include_router(api_routing.router, prefix="/api")
 
 if __name__ == "__main__":
-    logging.info("running a FastAPI APP")
+    logger.info("running a FastAPI APP")
     uvicorn.run(app, host="127.0.0.1", port=8000)

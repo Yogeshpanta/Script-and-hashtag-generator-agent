@@ -63,19 +63,6 @@ Additional rules:
     
     """
 
-    #     structure_breakdown_prompt = """
-    # You are an assistant that extracts structured data for a marketing campaign video. From the given user prompt, extract the following fields as JSON:
-    # - campaign_title (string): create a title if it's not directly present
-    # - products (list): mention if not available
-    # - location (string): default to None if not present
-    # - language (string): default to None if not present
-    # - tone (string)
-    #  "mode": "hashtag",
-    #   "steps": [False,False]
-    # - end_customer (string)
-    # - mode (string): video, hashtag, etc.
-    # - steps (list of bool or strings): processing steps if provided
-    # """
 
     supervisor_prompt = """You are the controller agent that decides which tools to call based on the user's request.
         Analyze the current state and structured data to determine the next appropriate action.

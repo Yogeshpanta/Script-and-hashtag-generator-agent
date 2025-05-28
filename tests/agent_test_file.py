@@ -22,7 +22,7 @@ class SystemPrompts:
         so on ... 
         }
         """
-        
+
     structure_breakdown_prompt = """
         You are an expert in breaking down prompts into structured JSON.
         Given a prompt, extract the following keys (if available). Use `null` if missing.
@@ -41,7 +41,7 @@ class SystemPrompts:
         "end_customer": "Gen Z"
         }
         """
-    
+
     has_tag_prompt = """ You are expert in generating #Hash Tags based on data of recent trends. From a user prompt provide a trending top five Hashtags that should be useful in ranking product from SEO point of view
         can be used while making
         videos using '#" symbol:
@@ -53,6 +53,7 @@ class SystemPrompts:
 # Models for different types of data
 class UserInput(TypedDict):
     """User input for campaign creation"""
+
     campaign_type: str
     product: List[str]
     rough_theme: str
@@ -60,6 +61,7 @@ class UserInput(TypedDict):
 
 class UserPromptBreakdown(TypedDict):
     """Breakdown of user prompt into structured data"""
+
     campaign_type: Optional[str]
     products: Optional[List[str]]
     location: Optional[str]
@@ -70,11 +72,13 @@ class UserPromptBreakdown(TypedDict):
 
 class HashInput(TypedDict):
     """Input for hashtag generation"""
+
     input_list: str
 
 
 class AgentState(TypedDict):
     """Main state for the entire workflow"""
+
     # Original user input
     user_input: Optional[UserInput]
     # Structured data from user input
@@ -95,14 +99,20 @@ def user(state: AgentState) -> AgentState:
     # In a real implementation, this would take input from a real user
     # For this example, we're simulating user interaction
     if len(state["messages"]) == 0:
-        print("User: I want to create a social media campaign for our new running shoes.")
+        print(
+            "User: I want to create a social media campaign for our new running shoes."
+        )
         state["user_input"] = {
             "campaign_type": "social media",
             "product": ["running shoes", "athletic wear"],
-            "rough_theme": "Targeting young athletes aged 18-25 in the UK, using an energetic tone."
+            "rough_theme": "Targeting young athletes aged 18-25 in the UK, using an energetic tone.",
         }
-        state["messages"].append(HumanMessage(content="I want to create a social media campaign for our new running shoes. "
-                                               "Targeting young athletes aged 18-25 in the UK, using an energetic tone."))
+        state["messages"].append(
+            HumanMessage(
+                content="I want to create a social media campaign for our new running shoes. "
+                "Targeting young athletes aged 18-25 in the UK, using an energetic tone."
+            )
+        )
     state["current_agent"] = "supervisor"
     return state
 
@@ -111,12 +121,14 @@ def supervisor(state: AgentState) -> AgentState:
     """Supervisor node that routes to different agents based on the task"""
     latest_message = state["messages"][-1].content
     print(f"Supervisor received: {latest_message}")
-    
+
     # Check what stage we're at in the workflow
     if state.get("structured_data") is None:
         # Need to structure the data first
         print("Supervisor: Routing to Agent 1 for structure analysis.")
-        state["messages"].append(AIMessage(content="Routing request to structure analyzer."))
+        state["messages"].append(
+            AIMessage(content="Routing request to structure analyzer.")
+        )
         state["current_agent"] = "agent_1"
     elif state.get("generated_script") is None:
         # Next, generate the script
@@ -134,28 +146,32 @@ def supervisor(state: AgentState) -> AgentState:
         final_message = f"Campaign creation complete!\n\nScript: {state['generated_script'][:100]}...\n\nHashtags: {', '.join(state['hashtags'])}"
         state["messages"].append(AIMessage(content=final_message))
         state["current_agent"] = "user"
-    
+
     return state
 
 
 def agent_1(state: AgentState) -> AgentState:
     """Agent specialized in structure analysis - breaks down user input into structured data"""
     print("Agent 1: Analyzing and structuring user input.")
-    
+
     user_input = state["user_input"]
-    prompt = f"""I want to create a video for {user_input['campaign_type']}, which should be suitable for the products {', '.join(user_input['product'])}
-You can use the following description to generate a script: {user_input['rough_theme']}
+    prompt = f"""I want to create a video for {user_input["campaign_type"]}, which should be suitable for the products {", ".join(user_input["product"])}
+You can use the following description to generate a script: {user_input["rough_theme"]}
 """
-    
+
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7, api_key=openai_api_key)
-    response = llm.invoke([
-        {"role": "system", "content": SystemPrompts.structure_breakdown_prompt},
-        {"role": "user", "content": prompt}
-    ])
-    
+    response = llm.invoke(
+        [
+            {"role": "system", "content": SystemPrompts.structure_breakdown_prompt},
+            {"role": "user", "content": prompt},
+        ]
+    )
+
     structured_data = json.loads(response.content)
     state["structured_data"] = structured_data
-    state["messages"].append(AIMessage(content=f"Structured data created: {response.content}"))
+    state["messages"].append(
+        AIMessage(content=f"Structured data created: {response.content}")
+    )
     state["current_agent"] = "supervisor"  # Send back to supervisor
     return state
 
@@ -163,22 +179,28 @@ You can use the following description to generate a script: {user_input['rough_t
 def agent_2(state: AgentState) -> AgentState:
     """Agent specialized in script generation - creates scripts based on structured data"""
     print("Agent 2: Generating campaign script.")
-    
+
     structured_data = state["structured_data"]
-    prompt = f"""I want to create a video for {structured_data.get('campaign_type', 'marketing')}, which should be suitable for the products {', '.join(structured_data.get('products', ['product']))}
-Generate script in language: {structured_data.get('language', 'English')}, should be suitable for location {structured_data.get('location', 'global')}, 
-tone: {structured_data.get('Tone', 'professional')} and must target end customer: {structured_data.get('end_customer', 'general audience')}
+    prompt = f"""I want to create a video for {structured_data.get("campaign_type", "marketing")}, which should be suitable for the products {", ".join(structured_data.get("products", ["product"]))}
+Generate script in language: {structured_data.get("language", "English")}, should be suitable for location {structured_data.get("location", "global")}, 
+tone: {structured_data.get("Tone", "professional")} and must target end customer: {structured_data.get("end_customer", "general audience")}
 Generate a compelling and engaging video script that aligns with these specifications.
 """
-    
+
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.8, api_key=openai_api_key)
-    response = llm.invoke([
-        {"role": "system", "content": SystemPrompts.script_generator_prompt},
-        {"role": "user", "content": prompt}
-    ])
-    
+    response = llm.invoke(
+        [
+            {"role": "system", "content": SystemPrompts.script_generator_prompt},
+            {"role": "user", "content": prompt},
+        ]
+    )
+
     state["generated_script"] = response.content
-    state["messages"].append(AIMessage(content=f"Script generated successfully. First 100 chars: {response.content[:100]}..."))
+    state["messages"].append(
+        AIMessage(
+            content=f"Script generated successfully. First 100 chars: {response.content[:100]}..."
+        )
+    )
     state["current_agent"] = "supervisor"  # Send back to supervisor
     return state
 
@@ -186,32 +208,38 @@ Generate a compelling and engaging video script that aligns with these specifica
 def agent_3(state: AgentState) -> AgentState:
     """Agent specialized in hashtag generation - creates trending hashtags for the campaign"""
     print("Agent 3: Generating hashtags for the campaign.")
-    
+
     structured_data = state["structured_data"]
-    products = ', '.join(structured_data.get('products', ['product']))
-    campaign_type = structured_data.get('campaign_type', 'marketing')
-    
+    products = ", ".join(structured_data.get("products", ["product"]))
+    campaign_type = structured_data.get("campaign_type", "marketing")
+
     prompt = f"Provide the top hashtags for {campaign_type} campaign about {products}"
-    
+
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.8, api_key=openai_api_key)
-    response = llm.invoke([
-        {"role": "system", "content": SystemPrompts.has_tag_prompt},
-        {"role": "user", "content": prompt}
-    ])
-    
+    response = llm.invoke(
+        [
+            {"role": "system", "content": SystemPrompts.has_tag_prompt},
+            {"role": "user", "content": prompt},
+        ]
+    )
+
     # Extract hashtags from response
-    hashtags = [tag.strip() for tag in response.content.split() if tag.startswith('#')]
+    hashtags = [tag.strip() for tag in response.content.split() if tag.startswith("#")]
     if not hashtags:
         # Fallback if no hashtags with # were found
         hashtags = ["#" + word for word in response.content.split()[:5]]
-    
+
     state["hashtags"] = hashtags
-    state["messages"].append(AIMessage(content=f"Hashtags generated: {', '.join(hashtags)}"))
+    state["messages"].append(
+        AIMessage(content=f"Hashtags generated: {', '.join(hashtags)}")
+    )
     state["current_agent"] = "supervisor"  # Send back to supervisor
     return state
 
 
-def route_based_on_agent(state: AgentState) -> Literal["supervisor", "agent_1", "agent_2", "agent_3", "user", END]:
+def route_based_on_agent(
+    state: AgentState,
+) -> Literal["supervisor", "agent_1", "agent_2", "agent_3", "user", END]:
     """Router function to determine the next node."""
     return state["current_agent"]
 
@@ -235,8 +263,8 @@ workflow.add_conditional_edges(
         "agent_1": "agent_1",
         "agent_2": "agent_2",
         "agent_3": "agent_3",
-        END: END
-    }
+        END: END,
+    },
 )
 
 workflow.add_conditional_edges(
@@ -247,8 +275,8 @@ workflow.add_conditional_edges(
         "agent_1": "agent_1",
         "agent_2": "agent_2",
         "agent_3": "agent_3",
-        END: END
-    }
+        END: END,
+    },
 )
 
 # Agents return to supervisor after completing their tasks
@@ -256,15 +284,12 @@ for agent in ["agent_1", "agent_2", "agent_3"]:
     workflow.add_conditional_edges(
         agent,
         route_based_on_agent,
-        {
-            "supervisor": "supervisor",
-            "user": "user",
-            END: END
-        }
+        {"supervisor": "supervisor", "user": "user", END: END},
     )
 
 # Compile the graph
 app = workflow.compile()
+
 
 # Run the graph with an example starting point
 def run_example():
@@ -275,17 +300,19 @@ def run_example():
         "generated_script": None,
         "hashtags": None,
         "messages": [],
-        "current_agent": "user"
+        "current_agent": "user",
     }
-    
+
     # Run the workflow from start to finish
     result = app.invoke(state)
     print("\n--- Workflow execution complete ---\n")
-    
+
     # Display final results
     if result.get("generated_script") and result.get("hashtags"):
         print("\n=== Final Campaign Results ===")
-        print(f"\nGenerated Script (first 200 chars):\n{result['generated_script'][:200]}...\n")
+        print(
+            f"\nGenerated Script (first 200 chars):\n{result['generated_script'][:200]}...\n"
+        )
         print(f"Hashtags: {', '.join(result['hashtags'])}\n")
 
 

@@ -1,8 +1,9 @@
-from pydantic import BaseModel
-from typing import List
+from typing import List, TypedDict
 
-class HashInput(BaseModel):
-    input_list:str
 
-class HashTagOutput(BaseModel):
+class HashInput(TypedDict):
+    input_list: str
+
+
+class HashTagOutput(TypedDict):
     hastag: List[str]
